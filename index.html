@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Mesas de Oficina</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+            margin: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .save-load-btns {
+            display: flex;
+            gap: 10px;
+        }
+        .save-btn, .load-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        .save-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .save-btn:hover {
+            background-color: #218838;
+        }
+        .load-btn {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .load-btn:hover {
+            background-color: #138496;
+        }
+        .day-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .day-btn {
+            padding: 10px 20px;
+            border: 2px solid #007bff;
+            background-color: white;
+            color: #007bff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .day-btn:hover {
+            background-color: #f0f0f0;
+        }
+        .day-btn.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .office-layout {
+            position: relative;
+            background-color: #f9f9f9;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 60px 40px;
+            margin-bottom: 20px;
+        }
+        .window, .door {
+            position: absolute;
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .window {
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .door {
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .desk-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .desk {
+            background-color: white;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        .desk-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .desk-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .desk-input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        .desk.desk-7 {
+            grid-column: 1;
+        }
+        .clear-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .clear-btn:hover {
+            background-color: #c82333;
+        }
+        .current-day {
+            text-align: center;
+            font-size: 20px;
+            color: #007bff;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .file-input {
+            display: none;
+        }
+        .status-message {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        .status-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Control de Mesas de Oficina</h1>
+        
+        <div class="controls">
+            <div class="save-load-btns">
+                <button class="save-btn">💾 Guardar datos</button>
+                <button class="load-btn">📁 Cargar datos</button>
+                <input type="file" class="file-input" accept=".json">
+            </div>
+        </div>
+        
+        <div class="status-message"></div>
+        
+        <div class="day-selector">
+            <button class="day-btn active" data-day="lunes">Lunes</button>
+            <button class="day-btn" data-day="martes">Martes</button>
+            <button class="day-btn" data-day="miercoles">Miércoles</button>
+            <button class="day-btn" data-day="jueves">Jueves</button>
+            <button class="day-btn" data-day="viernes">Viernes</button>
+        </div>
+        
+        <div class="current-day">Día actual: Lunes</div>
+        
+        <div class="office-layout">
+            <div class="window">Ventana</div>
+            <div class="door">Puerta</div>
+            
+            <div class="desk-grid">
+                <div class="desk">
+                    <div class="desk-number">Mesa 1</div>
+                    <input type="text" class="desk-input" data-desk="1" placeholder="Nombre empleado">
+                </div>
+                <div class="desk">
+                    <div class="desk-number">Mesa 2</div>
+                    <input type="text" class="desk-input" data-desk="2" placeholder="Nombre empleado">
+                </div>
+                <div class="desk">
+                    <div class="desk-number">Mesa 3</div>
+                    <input type="text" class="desk-input" data-desk="3" placeholder="Nombre empleado">
+                </div>
+                <div class="desk">
+                    <div class="desk-number">Mesa 4</div>
+                    <input type="text" class="desk-input" data-desk="4" placeholder="Nombre empleado">
+                </div>
+                <div class="desk">
+                    <div class="desk-number">Mesa 5</div>
+                    <input type="text" class="desk-input" data-desk="5" placeholder="Nombre empleado">
+                </div>
+                <div class="desk">
+                    <div class="desk-number">Mesa 6</div>
+                    <input type="text" class="desk-input" data-desk="6" placeholder="Nombre empleado">
+                </div>
+                <div class="desk desk-7">
+                    <div class="desk-number">Mesa 7</div>
+                    <input type="text" class="desk-input" data-desk="7" placeholder="Nombre empleado">
+                </div>
+            </div>
+        </div>
+        
+        <button class="clear-btn">Limpiar día actual</button>
+    </div>
+
+    <script>
+        // Estado de la aplicación
+        let currentDay = 'lunes';
+        let deskAssignments = {
+            lunes: {1:'', 2:'', 3:'', 4:'', 5:'', 6:'', 7:''},
+            martes: {1:'', 2:'', 3:'', 4:'', 5:'', 6:'', 7:''},
+            miercoles: {1:'', 2:'', 3:'', 4:'', 5:'', 6:'', 7:''},
+            jueves: {1:'', 2:'', 3:'', 4:'', 5:'', 6:'', 7:''},
+            viernes: {1:'', 2:'', 3:'', 4:'', 5:'', 6:'', 7:''}
+        };
+        
+        // Mostrar mensaje de estado
+        function showStatus(message, isSuccess = true) {
+            const statusEl = document.querySelector('.status-message');
+            statusEl.textContent = message;
+            statusEl.className = `status-message ${isSuccess ? 'success' : 'error'}`;
+            statusEl.style.display = 'block';
+            
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Función para capitalizar la primera letra
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+        
+        // Guardar datos en archivo JSON
+        document.querySelector('.save-btn').addEventListener('click', function() {
+            // Asegurarse de guardar los datos actuales
+            saveCurrentDayData();
+            
+            const dataStr = JSON.stringify(deskAssignments, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `mesas_oficina_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            showStatus('Datos guardados correctamente');
+        });
+        
+        // Cargar datos desde archivo JSON
+        document.querySelector('.load-btn').addEventListener('click', function() {
+            document.querySelector('.file-input').click();
+        });
+        
+        document.querySelector('.file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const loadedData = JSON.parse(event.target.result);
+                    
+                    // Validar estructura de datos
+                    const days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'];
+                    const isValid = days.every(day => 
+                        loadedData[day] && typeof loadedData[day] === 'object'
+                    );
+                    
+                    if (isValid) {
+                        deskAssignments = loadedData;
+                        loadDayData();
+                        showStatus('Datos cargados correctamente');
+                    } else {
+                        showStatus('El archivo no tiene el formato correcto', false);
+                    }
+                } catch (error) {
+                    showStatus('Error al cargar el archivo', false);
+                }
+            };
+            
+            reader.readAsText(file);
+            e.target.value = ''; // Limpiar input para poder cargar el mismo archivo
+        });
+        
+        // Cambiar día
+        document.querySelectorAll('.day-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Guardar datos del día actual antes de cambiar
+                saveCurrentDayData();
+                
+                // Cambiar día activo
+                document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentDay = this.dataset.day;
+                
+                // Actualizar el indicador del día actual
+                document.querySelector('.current-day').textContent = 'Día actual: ' + capitalize(currentDay);
+                
+                // Cargar datos del nuevo día
+                loadDayData();
+            });
+        });
+        
+        // Guardar datos cuando se escribe en un campo
+        document.querySelectorAll('.desk-input').forEach(input => {
+            input.addEventListener('input', function() {
+                const deskNumber = this.dataset.desk;
+                deskAssignments[currentDay][deskNumber] = this.value;
+            });
+        });
+        
+        // Limpiar día actual
+        document.querySelector('.clear-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (confirm(`¿Seguro que quieres limpiar todas las asignaciones del ${currentDay}?`)) {
+                // Limpiar datos en memoria
+                for (let i = 1; i <= 7; i++) {
+                    deskAssignments[currentDay][i] = '';
+                }
+                
+                // Limpiar campos de entrada
+                document.querySelectorAll('.desk-input').forEach(input => {
+                    input.value = '';
+                });
+                
+                showStatus(`Asignaciones del ${currentDay} limpiadas`);
+            }
+        });
+        
+        // Función para guardar datos del día actual
+        function saveCurrentDayData() {
+            document.querySelectorAll('.desk-input').forEach(input => {
+                const deskNumber = input.dataset.desk;
+                deskAssignments[currentDay][deskNumber] = input.value;
+            });
+        }
+        
+        // Función para cargar datos del día
+        function loadDayData() {
+            document.querySelectorAll('.desk-input').forEach(input => {
+                const deskNumber = input.dataset.desk;
+                input.value = deskAssignments[currentDay][deskNumber] || '';
+            });
+        }
+        
+        // Cargar datos iniciales
+        loadDayData();
+    </script>
+</body>
+</html>
